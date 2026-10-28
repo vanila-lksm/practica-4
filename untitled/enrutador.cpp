@@ -22,7 +22,7 @@ void enrutador::eliminarVecino(char idVecino)
 
 void enrutador::actualizarCosto(char destino, int costo)
 {conex[destino] = costo;}
-bool enrutador::esvecino(char idVecino)
+bool enrutador::esVecino(char idVecino)
 {
     return vecinos.find(idVecino) != vecinos.end();
 }

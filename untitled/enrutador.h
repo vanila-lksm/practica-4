@@ -23,7 +23,7 @@ public:
     void agregarVecino(char id,int costo);
     void eliminarVecino(char id);
     void actualizarCosto(char destino, int costo);
-    bool esvecino(char id);
+    bool esVecino(char id);
     int costoEnlace(char id);
     void limpiarConex();
     int costoHacia(char destino)const;
