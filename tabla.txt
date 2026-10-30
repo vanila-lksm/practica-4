@@ -1,0 +1,16 @@
+void imprimirVecinos()
+{
+	cout<<"enrutador: "<<identificador<<endl;
+   for(auto v=vecinos.begin();v!=vecinos.end();v++)
+	{
+		cout<<identificador<<" --"<<v->second<<"--> "<<v->first<<endl; 
+	}
+}
+
+void imprimirTabla()
+{
+	for(map<char,enrutador>::iterator it=enrutadores.begin();it!=enrutadores.end();it++)
+	{
+		it->second.imprimirVecinos();
+	}
+}
