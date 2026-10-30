@@ -1,4 +1,6 @@
 #include "red.h"
+#include<iostream>
+#include<fstream>
 red::red() {}
 red::~red(){}
 bool red::existeEnrutador(char id) const
@@ -14,9 +16,9 @@ bool red::agregarEnrutador(char id)
 }
 bool red::eliminarEnrutador(char id)
 {
-    std::map<char, enrutador>::iterator it = enrutadores.find(id);
+    map<char, enrutador>::iterator it = enrutadores.find(id);
     if (it == enrutadores.end())
-        return false;
+        throw string("el enrutador no existe");
 
     for (std::map<char, enrutador>::iterator otro = enrutadores.begin();otro != enrutadores.end(); ++otro)
     {
@@ -33,11 +35,11 @@ int red::cantidadEnrutadores() const
 bool red::conectar(char idA, char idB, int costo)
 {
     if (idA == idB)
-        return false;
+        throw string("no conex entre si mismo");
     if (!existeEnrutador(idA) || !existeEnrutador(idB))
-        return false;
+        throw string("alguno de los enrutadores no existe");
     if (costo <= 0)
-        return false;
+        throw string("el costo debe ser mayor que cero");
 
     enrutadores[idA].agregarVecino(idB, costo);
     enrutadores[idB].agregarVecino(idA, costo);
@@ -46,23 +48,22 @@ bool red::conectar(char idA, char idB, int costo)
 bool red::desconectar(char idA, char idB)
 {
     if (!existeEnrutador(idA) || !existeEnrutador(idB))
-        return false;
+        throw string("alguno de los enrutadores no existe");
     if (!enrutadores[idA].esVecino(idB))
-        return false;
-
+        throw std::string("el enlace no existe");
     enrutadores[idA].eliminarVecino(idB);
     enrutadores[idB].eliminarVecino(idA);
     return true;
 }
 //los costos
 void red::calc_costosMin(char origen,
-                    std::map<char, int> &costos,
-                    std::map<char, char> &previos)
+                    map<char, int> &costos,
+                    map<char, char> &previos)
 {
     costos.clear();
     previos.clear();
     map<char, bool> visitado;
-    for (std::map<char, enrutador>::const_iterator it = enrutadores.begin();
+    for (map<char, enrutador>::const_iterator it = enrutadores.begin();
          it != enrutadores.end(); ++it)
     {
         costos[it->first] = infinito;
@@ -89,10 +90,10 @@ void red::calc_costosMin(char origen,
         if (nodo == '\0')
             break;
         visitado[nodo] = true;
-        const std::map<char, int> &vecinos =
+        const map<char, int> &vecinos =
             enrutadores.find(nodo)->second.getVecinos();
 
-        for (std::map<char, int>::const_iterator v = vecinos.begin();
+        for (map<char, int>::const_iterator v = vecinos.begin();
              v != vecinos.end(); ++v)
         {
             char idVecino = v->first;
@@ -133,13 +134,13 @@ void red::actualizarConex()
 
 vector<char> red::encontrarCamino(char origen, char destino)
 {
-    std::vector<char> camino;
+    vector<char> camino;
 
     if (!existeEnrutador(origen) || !existeEnrutador(destino))
-        return camino;
+        throw string("alguno de los enrutadores no existe");
 
-    std::map<char, int> costos;
-    std::map<char, char> previos;
+    map<char, int> costos;
+    map<char, char> previos;
 
     calc_costosMin(origen, costos, previos);
 
@@ -165,8 +166,82 @@ vector<char> red::encontrarCamino(char origen, char destino)
 }
 int red::costoEntre(char origen, char destino) const
 {
-    std::map<char, enrutador>::const_iterator it = enrutadores.find(origen);
+    map<char, enrutador>::const_iterator it = enrutadores.find(origen);
     if (it == enrutadores.end())
         return -1;
     return it->second.costoHacia(destino);
 }
+//imprimir...
+
+void red::imprimirRuta(char inicio,char destino)
+{
+    vector<char> camino = encontrarCamino(inicio, destino);
+
+    if (camino.empty())
+    {
+        cout<<inicio<<" -> "<<destino<<"   sin ruta"<<endl;
+        return;
+    }
+
+    for (size_t i = 0; i < camino.size(); ++i)
+    {
+        cout << camino[i];
+        if (i + 1 < camino.size())
+            cout <<" -> ";
+    }
+    cout<< "   (costo " <<costoEntre(inicio, destino)<<")"<<endl;
+}
+
+void red::cargarEnru(const string& ruta)
+{
+    ifstream archivo(ruta.c_str());
+    if (!archivo.is_open())
+        throw string ("cargarDesdeArchivo: no se pudo abrir " + ruta);
+    red temporal;
+    string linea;
+    if (!getline(archivo, linea))
+        throw string("cargarDesdeArchivo: el archivo esta vacio");
+
+    for (size_t i = 0; i < linea.size(); ++i)
+    {
+        if (linea[i] != ' ' && linea[i] != '\t' && linea[i] != '\r')
+            temporal.agregarEnrutador(linea[i]);
+    }
+
+    if (temporal.cantidadEnrutadores() == 0)
+        throw string ("cargarDesdeArchivo: no se declaro ningun enrutador");
+
+    char origen, destino;
+    int costo;
+    while (archivo >> origen >> destino >> costo)
+    {
+        temporal.conectar(origen, destino, costo);
+    }
+
+    if (!archivo.eof())
+        throw string ("cargarDesdeArchivo: datos mal formados en los enlaces");
+
+    archivo.close();
+
+    enrutadores = temporal.enrutadores;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

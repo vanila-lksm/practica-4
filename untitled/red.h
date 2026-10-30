@@ -26,6 +26,9 @@ public:
     void actualizarConex();
     vector<char> encontrarCamino(char origen, char destino);
     int costoEntre(char origen, char destino) const;
+    //imprimir y cargar/guardar
+    void imprimirRuta(char inicio,char destino);
+    void cargarEnru(const string& ruta);
 };
 
 
